@@ -1,0 +1,84 @@
+_schema-version: "3.2"
+ID: z_admin_user_status
+version: 0.0.1
+modules:
+- name: z_admin_user_status-app-content
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: z_admin_user_status-repo-host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - comclaroproveedoresadminuserstatus.zip
+      name: comclaroproveedoresadminuserstatus
+      target-path: resources/
+- name: comclaroproveedoresadminuserstatus
+  type: html5
+  path: adminuserstatus
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+- name: z_admin_user_status-destination-content
+  type: com.sap.application.content
+  requires:
+  - name: z_admin_user_status-destination-service
+    parameters:
+      content-target: true
+  - name: z_admin_user_status-repo-host
+    parameters:
+      service-key:
+        name: z_admin_user_status-repo-host-key
+  - name: uaa_z_admin_user_status
+    parameters:
+      service-key:
+        name: uaa_z_admin_user_status-key
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Name: z_admin_user_status_z_admin_user_status_repo_host
+          ServiceInstanceName: z_admin_user_status-html5-service
+          ServiceKeyName: z_admin_user_status-repo-host-key
+          sap.cloud.service: z_admin_user_status
+        - Authentication: OAuth2UserTokenExchange
+          Name: z_admin_user_status_uaa_z_admin_user_status
+          ServiceInstanceName: z_admin_user_status-xsuaa-service
+          ServiceKeyName: uaa_z_admin_user_status-key
+          sap.cloud.service: z_admin_user_status
+        existing_destinations_policy: ignore
+  build-parameters:
+    no-source: true
+resources:
+- name: z_admin_user_status-repo-host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: z_admin_user_status-html5-service
+    service-plan: app-host
+- name: z_admin_user_status-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      version: 1.0.0
+    service: destination
+    service-name: z_admin_user_status-destination-service
+    service-plan: lite
+- name: uaa_z_admin_user_status
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: z_admin_user_status-xsuaa-service
+    service-plan: application
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true
