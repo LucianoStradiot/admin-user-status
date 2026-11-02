@@ -141,6 +141,6 @@
   },
   "sap.cloud": {
     "public": true,
-    "service": "z_admin_noti_control"
+    "service": "z_admin_user_status"
   }
 }
