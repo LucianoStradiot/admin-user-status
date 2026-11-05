@@ -51,10 +51,7 @@ sap.ui.define([
                 });
 
                 this.initArrayObjectView();
-
                 this.getView().setModel(modelSettings, "oModelSettings");
-
-
                 this.onSetView();
             },
 
@@ -85,6 +82,13 @@ sap.ui.define([
                 $.ajax(settings).done(function (response) {
 
                     var dataResponse = response;
+                    dataResponse.forEach(function (item) {
+                        if (item.DELETESTATUS_DESCRIPTION === "ACTIVO") {
+                            item.DELETESTATUS_DESCRIPTION = this.i18n.getText("estadoActivo");
+                        } else if (item.DELETESTATUS_DESCRIPTION === "INACTIVO") {
+                            item.DELETESTATUS_DESCRIPTION = this.i18n.getText("estadoInactivo");
+                        }
+                    }.bind(this));
                     oModel.setProperty("/DATA", dataResponse);
                     oModel.setProperty("/TITULO_TABLA", this.i18n.getText("resultados", [dataResponse.length]));
                     oModel.refresh();
@@ -93,10 +97,8 @@ sap.ui.define([
 
                     this.busyGlobal(false);
                 }.bind(this));
-
-
-
             },
+
             handleSortButtonPressed: function () {
                 this.getViewSettingsDialog("com.claro.proveedores.adminuserstatus.view.fragments.dialogoSort")
                     .then(function (oViewSettingsDialog) {
@@ -288,18 +290,12 @@ sap.ui.define([
                 if (this.getView().getModel("oModelSettings") !== undefined) {
                     this.oModelSettings = this.getView().getModel("oModelSettings");
                 };
-                // this.i18n = this.getView().getModel("i18n").getResourceBundle();
-                var oI18nModel = this.getView().getModel("i18n");
-var oBundle = oI18nModel.getResourceBundle();
-
-console.log("Idioma UI5:", sap.ui.getCore().getConfiguration().getLanguage());
-console.log("Título del bundle:", oBundle.getText("title"));
-console.log("Botón insertar:", oBundle.getText("insertar"));
-console.log("Buscar:", oBundle.getText("buscar"));
+                this.i18n = this.getView().getModel("i18n").getResourceBundle();
                 this.geturl = this.getOwnerComponent().getManifestObject().resolveUri('../PORTAL_PROVEEDORES_REST/gUsersstatus');
                 this.createurl = this.getOwnerComponent().getManifestObject().resolveUri('../PORTAL_PROVEEDORES_REST/cUsersstatus');
                 this.updateurl = this.getOwnerComponent().getManifestObject().resolveUri('../PORTAL_PROVEEDORES_REST/uUsersstatus');
             },
+
             busyGlobal: function (cond) {
                 if (cond) {
                     BusyIndicator.show(0);
@@ -309,6 +305,7 @@ console.log("Buscar:", oBundle.getText("buscar"));
                     }.bind(this));
                 }
             },
+
             formattDateTime: function (fecha) {
                 var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({
                     style: 'medium',
@@ -792,6 +789,17 @@ console.log("Buscar:", oBundle.getText("buscar"));
                 oTable = this.getView().byId('oTable');
                 oBinding = oTable.getBinding('items').oList;
                 aCols = this.createColumnConfig();
+                aData = oBinding.map(function (item) {
+                    var oItem = Object.assign({}, item);
+
+                    if (oItem.DELETESTATUS_DESCRIPTION === "ACTIVO") {
+                        oItem.DELETESTATUS_DESCRIPTION = this.i18n.getText("estadoActivo");
+                    } else if (oItem.DELETESTATUS_DESCRIPTION === "INACTIVO") {
+                        oItem.DELETESTATUS_DESCRIPTION = this.i18n.getText("estadoInactivo");
+                    }
+
+                    return oItem;
+                }.bind(this));
                 oSettings = {
                     workbook: { columns: aCols },
                     fileName: 'usersstatus.xlsx',
@@ -801,15 +809,14 @@ console.log("Buscar:", oBundle.getText("buscar"));
                 oSheet = new Spreadsheet(oSettings);
                 oSheet.build().then(function () {
                     MessageToast.show(this.i18n.getText("ok2"));
-                }).finally(function () {
+                }.bind(this)).finally(function () {
                     oSheet.destroy();
                 });
             },
+
             createColumnConfig: function () {
 
-
-                var userstatusid = this.i18n.getText("USERSTATUSID"),
-                    description = this.i18n.getText("description"),
+                var description = this.i18n.getText("description"),
                     estado = this.i18n.getText("estado");
 
                 return [
@@ -825,6 +832,7 @@ console.log("Buscar:", oBundle.getText("buscar"));
                     }
                 ];
             },
+
             initArrayObjectView: function () {
 
                 this.arrayObjectView = [
